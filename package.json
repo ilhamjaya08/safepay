@@ -23,6 +23,7 @@
         "vite": "^7.0.4"
     },
     "dependencies": {
+        "@iconify/react": "^6.0.0",
         "framer-motion": "^12.23.12"
     }
 }
