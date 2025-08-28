@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\QRController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -35,7 +36,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Role-specific dashboards
-Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:user', 'user.status', 'check.suspended'])->group(function () {
     Route::get('/user/dashboard', [DashboardController::class, 'userDashboard'])->name('user.dashboard');
     
     // QR functionality
@@ -51,6 +52,8 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
         Route::get('/qr/{invoiceId?}', [TransferController::class, 'qrTransfer'])->name('qr');
         Route::post('/validate-receiver', [TransferController::class, 'validateReceiver'])->name('validate');
         Route::post('/process', [TransferController::class, 'processTransfer'])->name('process');
+        Route::post('/by-wallet', [\App\Http\Controllers\TransferAccountController::class, 'transferByAccountNumber'])->name('wallet');
+        Route::post('/search-wallet', [\App\Http\Controllers\TransferAccountController::class, 'searchWallet'])->name('search');
     });
 
     // Bank Account functionality
@@ -67,8 +70,16 @@ Route::middleware(['auth', 'verified', 'role:operator'])->group(function () {
         return Inertia::render('Operator/BankApplications');
     })->name('operator.bank.applications');
     
-    // Bank Account Review API
-    Route::prefix('bank-applications')->name('operator.bank.')->group(function () {
+    // User Management for Operators
+    Route::prefix('operator/users')->name('operator.users.')->group(function () {
+        Route::get('/', [UserManagementController::class, 'operatorIndex'])->name('index');
+        Route::get('/{user}/details', [UserManagementController::class, 'getUserDetails'])->name('details');
+        Route::post('/{user}/suspend', [UserManagementController::class, 'suspendUser'])->name('suspend');
+        Route::post('/{user}/lift-suspension', [UserManagementController::class, 'liftSuspension'])->name('lift-suspension');
+    });
+    
+    // Bank Account Review API - with operator prefix
+    Route::prefix('operator/bank-applications')->name('operator.bank.')->group(function () {
         Route::get('/pending', [BankAccountController::class, 'pendingApplications'])->name('pending');
         Route::post('/{bankAccount}/review', [BankAccountController::class, 'review'])->name('review');
         Route::get('/all', [BankAccountController::class, 'allApplications'])->name('all');
@@ -77,19 +88,31 @@ Route::middleware(['auth', 'verified', 'role:operator'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
     Route::get('/manager/dashboard', [DashboardController::class, 'manager'])->name('manager.dashboard');
+    Route::get('/manager/activities', [DashboardController::class, 'managerActivities'])->name('manager.activities');
     Route::get('/manager/bank-applications', function() {
         return Inertia::render('Operator/BankApplications'); // Same component as operator
     })->name('manager.bank.applications');
     
-    // Bank Account Review API (Same as operator but with manager role)
-    Route::prefix('bank-applications')->name('manager.bank.')->group(function () {
+    // User Management for Managers (full access)
+    Route::prefix('manager/users')->name('manager.users.')->group(function () {
+        Route::get('/', [UserManagementController::class, 'managerIndex'])->name('index');
+        Route::get('/{user}/details', [UserManagementController::class, 'getUserDetails'])->name('details');
+        Route::post('/{user}/suspend', [UserManagementController::class, 'suspendUser'])->name('suspend');
+        Route::post('/{user}/lift-suspension', [UserManagementController::class, 'liftSuspension'])->name('lift-suspension');
+        Route::post('/{user}/toggle-status', [UserManagementController::class, 'toggleUserStatus'])->name('toggle-status');
+        Route::post('/{user}/topup', [UserManagementController::class, 'topUpWallet'])->name('topup');
+        Route::put('/{user}/update', [UserManagementController::class, 'updateUser'])->name('update');
+    });
+    
+    // Bank Account Review API - with manager prefix
+    Route::prefix('manager/bank-applications')->name('manager.bank.')->group(function () {
         Route::get('/pending', [BankAccountController::class, 'pendingApplications'])->name('pending');
         Route::post('/{bankAccount}/review', [BankAccountController::class, 'review'])->name('review');
         Route::get('/all', [BankAccountController::class, 'allApplications'])->name('all');
     });
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'check.suspended'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

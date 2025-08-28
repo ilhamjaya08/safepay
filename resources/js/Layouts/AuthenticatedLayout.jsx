@@ -100,32 +100,34 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 Bank Apps
                                             </a>
                                         </motion.div>
-                                        <motion.div
-                                            whileHover={{ scale: 1.05 }}
-                                            transition={{ type: "spring", stiffness: 300 }}
-                                        >
-                                            <a 
-                                                href="#" 
-                                                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                                            >
-                                                Reports
-                                            </a>
-                                        </motion.div>
                                     </>
                                 )}
                                 
                                 {user.role === 'manager' && (
+                                    <>
                                     <motion.div
                                         whileHover={{ scale: 1.05 }}
                                         transition={{ type: "spring", stiffness: 300 }}
                                     >
                                         <a 
-                                            href="#" 
+                                        href='/manager/activities'
                                             className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
                                         >
-                                            System
+                                            Transactions
                                         </a>
                                     </motion.div>
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        transition={{ type: "spring", stiffness: 300 }}
+                                    >
+                                        <a 
+                                            href="/manager/users" 
+                                            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Users
+                                        </a>
+                                    </motion.div>
+                                    </>
                                 )}
                             </div>
                         </div>

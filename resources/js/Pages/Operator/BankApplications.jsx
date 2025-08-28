@@ -1,11 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function BankApplications() {
+    const { auth } = usePage().props;
+    const user = auth.user;
     const [applications, setApplications] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedApp, setSelectedApp] = useState(null);
@@ -18,10 +20,17 @@ export default function BankApplications() {
 
     const loadApplications = async () => {
         try {
-            const response = await axios.get('/bank-applications/pending');
+            // Dynamic endpoint based on user role
+            const rolePrefix = user.role === 'manager' ? 'manager' : 'operator';
+            const apiEndpoint = `/${rolePrefix}/bank-applications/pending`;
+            console.log('Loading applications from:', apiEndpoint, 'for role:', user.role);
+            
+            const response = await axios.get(apiEndpoint);
+            console.log('Applications loaded:', response.data);
             setApplications(response.data);
         } catch (error) {
             console.error('Failed to load applications:', error);
+            console.error('Error details:', error.response);
         } finally {
             setIsLoading(false);
         }
@@ -40,7 +49,8 @@ export default function BankApplications() {
                 ...(action === 'reject' && { rejection_reason: rejectionReason })
             };
 
-            const response = await axios.post(`/bank-applications/${applicationId}/review`, payload);
+            const rolePrefix = user.role === 'manager' ? 'manager' : 'operator';
+            const response = await axios.post(`/${rolePrefix}/bank-applications/${applicationId}/review`, payload);
             
             if (response.data.success) {
                 alert(response.data.message);

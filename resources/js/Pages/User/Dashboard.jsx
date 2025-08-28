@@ -4,8 +4,19 @@ import { motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 
 export default function UserDashboard() {
-    const { auth, wallet, transactions, bank_account } = usePage().props;
+    const { auth, wallet, transactions, bank_account, user_status } = usePage().props;
     const user = auth.user;
+
+    const formatDate = (dateString) => {
+        if (!dateString) return null;
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
 
     const quickSendContacts = [
         { id: 1, name: "Miranda", avatar: "M", color: "bg-blue-500" },
@@ -68,6 +79,44 @@ export default function UserDashboard() {
                 </motion.div>
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+                    
+                    {/* Account Status Warnings */}
+                    {user_status && (!user_status.is_active || user_status.is_suspended) && (
+                        <motion.div
+                            className="rounded-xl p-4 border bg-red-50 border-red-200"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <div className="flex items-start space-x-3">
+                                <Icon 
+                                    icon={user_status.is_suspended ? 'mdi:account-cancel' : 'mdi:account-off'} 
+                                    className="w-6 h-6 mt-0.5 text-red-600" 
+                                />
+                                <div className="flex-1">
+                                    <h3 className="font-medium text-red-800">
+                                        {user_status.is_suspended ? 'Account Suspended' : 'Account Deactivated'}
+                                    </h3>
+                                    <p className="text-sm mt-1 text-red-700">
+                                        {user_status.is_suspended && user_status.suspension ? 
+                                            `Reason: ${user_status.suspension.reason}` : 
+                                            'Your account has been deactivated by the administrator.'
+                                        }
+                                    </p>
+                                    {user_status.is_suspended && user_status.suspension?.expires_at && (
+                                        <p className="text-sm mt-1 text-red-700">
+                                            <span className="font-medium">Expires:</span> {formatDate(user_status.suspension.expires_at)}
+                                        </p>
+                                    )}
+                                    <div className="mt-2">
+                                        <p className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-md inline-block">
+                                            ⚠️ All financial transactions are disabled
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
                     
                     {/* Bank Account Status Alert */}
                     {(!bank_account || bank_account.status !== 'approved') && (
@@ -151,20 +200,27 @@ export default function UserDashboard() {
                             {/* Balance */}
                             <div className="mb-6">
                                 <div className="flex items-center space-x-2 mb-2">
-                                    <h2 className="text-3xl lg:text-4xl font-bold">
-                                        {formatCurrency(wallet?.balance || 0)}
+                                    <h2 className={`text-3xl lg:text-4xl font-bold ${!user_status?.can_transact ? 'blur-sm' : ''}`}>
+                                        {user_status?.can_transact ? formatCurrency(wallet?.balance || 0) : '••••••••'}
                                     </h2>
                                     <motion.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
+                                        disabled={!user_status?.can_transact}
                                     >
-                                        <Icon icon="mdi:eye-outline" className="w-6 h-6 opacity-80" />
+                                        <Icon icon={user_status?.can_transact ? "mdi:eye-outline" : "mdi:lock"} className="w-6 h-6 opacity-80" />
                                     </motion.button>
                                 </div>
-                                {wallet?.locked_balance > 0 && (
-                                    <p className="text-sm opacity-80">
-                                        Tersedia: {formatCurrency(wallet.balance - wallet.locked_balance)}
+                                {!user_status?.can_transact ? (
+                                    <p className="text-sm opacity-80 text-red-200">
+                                        Balance hidden - Account restricted
                                     </p>
+                                ) : (
+                                    wallet?.locked_balance > 0 && (
+                                        <p className="text-sm opacity-80">
+                                            Tersedia: {formatCurrency(wallet.balance - wallet.locked_balance)}
+                                        </p>
+                                    )
                                 )}
                             </div>
 
@@ -176,10 +232,18 @@ export default function UserDashboard() {
                                 </div>
                                 <div>
                                     <p className="text-sm opacity-80 mb-1">Status</p>
-                                    <p className="font-medium">{wallet?.is_active ? 'Active' : 'Inactive'}</p>
+                                    <p className={`font-medium ${
+                                        !user_status?.can_transact ? 'text-red-200' :
+                                        wallet?.is_active ? 'text-white' : 'text-yellow-200'
+                                    }`}>
+                                        {!user_status?.can_transact ? 
+                                            (user_status?.is_suspended ? 'Suspended' : 'Inactive') :
+                                            (wallet?.is_active ? 'Active' : 'Inactive')
+                                        }
+                                    </p>
                                 </div>
                                 <div className="text-right">
-                                    <Icon icon="simple-icons:safepay" className="w-12 h-8" />
+                                    <Icon icon="simple-icons:safepay" className={`w-12 h-8 ${!user_status?.can_transact ? 'opacity-50' : ''}`} />
                                 </div>
                             </div>
                         </div>
@@ -193,10 +257,34 @@ export default function UserDashboard() {
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         {[
-                            { name: "Transfer", icon: "mdi:send", color: "text-blue-600", href: bank_account?.status === 'approved' ? route('user.transfer.index') : '#', disabled: bank_account?.status !== 'approved' },
-                            { name: "Scan QR", icon: "mdi:qrcode-scan", color: "text-purple-600", href: bank_account?.status === 'approved' ? route('user.qr.send') : '#', disabled: bank_account?.status !== 'approved' },
-                            { name: "Receive", icon: "mdi:qrcode", color: "text-green-600", href: route('user.qr.receive'), disabled: false },
-                            { name: "History", icon: "mdi:history", color: "text-orange-600", href: "#", disabled: bank_account?.status !== 'approved' },
+                            { 
+                                name: "Transfer", 
+                                icon: "mdi:send", 
+                                color: "text-blue-600", 
+                                href: (bank_account?.status === 'approved' && user_status?.can_transact) ? route('user.transfer.index') : '#', 
+                                disabled: bank_account?.status !== 'approved' || !user_status?.can_transact 
+                            },
+                            { 
+                                name: "Scan QR", 
+                                icon: "mdi:qrcode-scan", 
+                                color: "text-purple-600", 
+                                href: (bank_account?.status === 'approved' && user_status?.can_transact) ? route('user.qr.send') : '#', 
+                                disabled: bank_account?.status !== 'approved' || !user_status?.can_transact 
+                            },
+                            { 
+                                name: "Receive", 
+                                icon: "mdi:qrcode", 
+                                color: "text-green-600", 
+                                href: user_status?.can_transact ? route('user.qr.receive') : '#', 
+                                disabled: !user_status?.can_transact 
+                            },
+                            { 
+                                name: "History", 
+                                icon: "mdi:history", 
+                                color: "text-orange-600", 
+                                href: "#", 
+                                disabled: false 
+                            },
                         ].map((action, index) => (
                             <motion.div
                                 key={action.name}
@@ -211,6 +299,8 @@ export default function UserDashboard() {
                                 onClick={() => {
                                     if (!action.disabled) {
                                         window.location.href = action.href;
+                                    } else if (!user_status?.can_transact) {
+                                        alert(user_status?.is_suspended ? 'Account is suspended. All transactions are blocked.' : 'Account is inactive. Please contact support.');
                                     } else {
                                         alert('Please complete KYC verification first');
                                     }
@@ -229,19 +319,31 @@ export default function UserDashboard() {
                         ))}
                     </motion.div>
 
-                    {/* Quick Send */}
+                    {/* Quick Send
                     <motion.div
                         className="bg-white rounded-xl p-6 shadow-sm"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.4 }}
                     >
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Kirim Cepat</h3>
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Kirim Cepat</h3>
+                            {!user_status?.can_transact && (
+                                <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-md">
+                                    🔒 Disabled
+                                </span>
+                            )}
+                        </div>
+                        <div className={`flex items-center space-x-4 ${!user_status?.can_transact ? 'opacity-50 pointer-events-none' : ''}`}>
                             <motion.button
                                 className="flex flex-col items-center space-y-2"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={user_status?.can_transact ? { scale: 1.05 } : {}}
+                                whileTap={user_status?.can_transact ? { scale: 0.95 } : {}}
+                                onClick={() => {
+                                    if (!user_status?.can_transact) {
+                                        alert(user_status?.is_suspended ? 'Account is suspended. All transactions are blocked.' : 'Account is inactive. Please contact support.');
+                                    }
+                                }}
                             >
                                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center border-2 border-dashed border-gray-300">
                                     <Icon icon="mdi:plus" className="w-6 h-6 text-gray-400" />
@@ -253,11 +355,16 @@ export default function UserDashboard() {
                                 <motion.button
                                     key={contact.id}
                                     className="flex flex-col items-center space-y-2"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    whileHover={user_status?.can_transact ? { scale: 1.05 } : {}}
+                                    whileTap={user_status?.can_transact ? { scale: 0.95 } : {}}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+                                    onClick={() => {
+                                        if (!user_status?.can_transact) {
+                                            alert(user_status?.is_suspended ? 'Account is suspended. All transactions are blocked.' : 'Account is inactive. Please contact support.');
+                                        }
+                                    }}
                                 >
                                     <div className={`w-12 h-12 ${contact.color} rounded-full flex items-center justify-center text-white font-semibold`}>
                                         {contact.avatar}
@@ -266,7 +373,7 @@ export default function UserDashboard() {
                                 </motion.button>
                             ))}
                         </div>
-                    </motion.div>
+                    </motion.div> */}
 
                     {/* Transaction History */}
                     <motion.div
@@ -277,20 +384,28 @@ export default function UserDashboard() {
                     >
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-semibold text-gray-900">Riwayat Transaksi</h3>
-                            <motion.button 
-                                className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
-                                whileHover={{ scale: 1.05 }}
-                            >
-                                Lihat Semua
-                            </motion.button>
+                            {user_status?.can_transact ? (
+                                <motion.button 
+                                    className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+                                    whileHover={{ scale: 1.05 }}
+                                >
+                                    Lihat Semua
+                                </motion.button>
+                            ) : (
+                                <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-md">
+                                    🔒 Restricted
+                                </span>
+                            )}
                         </div>
 
-                        <div className="space-y-4">
+                        <div className={`space-y-4 ${!user_status?.can_transact ? 'opacity-50 pointer-events-none' : ''}`}>
                             {transactions?.length > 0 ? (
                                 transactions.map((transaction, index) => (
                                     <motion.div
                                         key={transaction.id}
-                                        className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                                        className={`flex items-center space-x-4 p-3 rounded-lg transition-colors ${
+                                            user_status?.can_transact ? 'hover:bg-gray-50' : 'bg-gray-50'
+                                        }`}
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}

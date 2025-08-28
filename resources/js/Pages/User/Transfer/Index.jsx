@@ -13,6 +13,7 @@ export default function TransferIndex() {
     const [description, setDescription] = useState('');
     const [isValidating, setIsValidating] = useState(false);
     const [showTransferForm, setShowTransferForm] = useState(false);
+    const [isTransferring, setIsTransferring] = useState(false);
 
     const validateReceiver = async () => {
         if (!receiverInput.trim()) return;
@@ -55,6 +56,29 @@ export default function TransferIndex() {
         setAmount('');
         setDescription('');
         setShowTransferForm(false);
+    };
+
+    const handleTransfer = async () => {
+        if (!amount || parseInt(amount) < 1000) return;
+        
+        setIsTransferring(true);
+        try {
+            const response = await axios.post('/transfer/by-wallet', {
+                wallet_number: receiver.wallet_number,
+                amount: amount,
+                description: description
+            });
+
+            if (response.data.success) {
+                alert('Transfer berhasil!');
+                resetForm();
+                window.location.reload();
+            }
+        } catch (error) {
+            alert(error.response?.data?.message || 'Transfer gagal');
+        } finally {
+            setIsTransferring(false);
+        }
     };
 
     return (
@@ -236,26 +260,22 @@ export default function TransferIndex() {
                                     </div>
 
                                     {/* Continue Button */}
-                                    <Link
-                                        href="/transfer/qr"
-                                        data={{
-                                            type: 'internal',
-                                            receiver: receiver,
-                                            amount: amount,
-                                            description: description
-                                        }}
-                                        className="block"
+                                    <motion.button
+                                        onClick={handleTransfer}
+                                        disabled={!amount || parseInt(amount) < 1000 || isTransferring}
+                                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
                                     >
-                                        <motion.button
-                                            disabled={!amount || parseInt(amount) < 1000}
-                                            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                        >
-                                            <Icon icon="mdi:arrow-right" className="w-5 h-5 mr-2 inline" />
-                                            Continue Transfer
-                                        </motion.button>
-                                    </Link>
+                                        {isTransferring ? (
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>
+                                        ) : (
+                                            <>
+                                                <Icon icon="mdi:arrow-right" className="w-5 h-5 mr-2 inline" />
+                                                Continue Transfer
+                                            </>
+                                        )}
+                                    </motion.button>
                                 </motion.div>
                             )}
                         </div>

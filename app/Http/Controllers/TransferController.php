@@ -54,6 +54,22 @@ class TransferController extends Controller
             ], 404);
         }
 
+        // Check if user is suspended
+        if ($user->isSuspended()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Account suspended - transfers are not allowed'
+            ], 403);
+        }
+
+        // Check if user is active
+        if (!$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Account inactive - transfers are not allowed'
+            ], 403);
+        }
+
         // Verify PIN (simplified - in real app you'd hash and compare)
         if ($wallet->pin_hash && !password_verify($request->pin, $wallet->pin_hash)) {
             return response()->json([
@@ -104,6 +120,11 @@ class TransferController extends Controller
 
         if ($receiver->id === $user->id) {
             return ['success' => false, 'message' => 'Cannot transfer to yourself'];
+        }
+
+        // Check if receiver is suspended or inactive
+        if ($receiver->isSuspended() || !$receiver->is_active) {
+            return ['success' => false, 'message' => 'Cannot transfer to inactive/suspended account'];
         }
 
         $amount = $request->amount;

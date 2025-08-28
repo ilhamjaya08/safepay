@@ -35,9 +35,8 @@ export default function ManagerDashboard() {
 
     const managerActions = [
         { title: 'User Management', description: 'Manage users, top up balances', icon: 'mdi:account-cog', color: 'text-blue-600', href: '/manager/users' },
-        { title: 'Transaction Control', description: 'Create, refund, cancel transactions', icon: 'mdi:swap-horizontal', color: 'text-green-600', href: '/manager/transactions' },
-        { title: 'System Settings', description: 'Configure system parameters', icon: 'mdi:cog', color: 'text-gray-600', href: '/manager/settings' },
-        { title: 'Reports & Analytics', description: 'Generate system reports', icon: 'mdi:chart-box', color: 'text-purple-600', href: '/manager/reports' },
+        { title: 'Transactions History', description: 'Analyze all transactions', icon: 'mdi:chart-box', color: 'text-purple-600', href: '/manager/activities' },
+        { title: 'New Bank Account Applications', description: 'Verify new users account status', icon: 'tdesign:verify', color: 'text-yellow-600', href: '/manager/bank-applications' },
     ];
 
     return (
@@ -157,9 +156,10 @@ export default function ManagerDashboard() {
                             <h3 className="text-lg font-semibold text-gray-900 mb-6">Manager Actions</h3>
                             <div className="space-y-3">
                                 {managerActions.map((action, index) => (
-                                    <motion.button
+                                    <motion.a
                                         key={action.title}
-                                        className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left w-full"
+                                        href={action.href}
+                                        className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left w-full block"
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         initial={{ opacity: 0, x: -20 }}
@@ -174,7 +174,7 @@ export default function ManagerDashboard() {
                                             <p className="text-xs text-gray-500">{action.description}</p>
                                         </div>
                                         <Icon icon="mdi:chevron-right" className="w-4 h-4 text-gray-400" />
-                                    </motion.button>
+                                    </motion.a>
                                 ))}
                             </div>
                         </motion.div>
@@ -188,12 +188,13 @@ export default function ManagerDashboard() {
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
-                                <motion.button 
+                                <motion.a 
+                                    href={route('manager.activities')}
                                     className="text-red-600 hover:text-red-700 text-sm font-medium"
                                     whileHover={{ scale: 1.05 }}
                                 >
                                     View All
-                                </motion.button>
+                                </motion.a>
                             </div>
 
                             <div className="space-y-4">

@@ -145,4 +145,26 @@ class User extends Authenticatable
                              ->orWhere('expires_at', '>', now());
                    })->exists();
     }
+
+    public function canTransact()
+    {
+        return $this->is_active && !$this->isSuspended();
+    }
+
+    public function canLogin()
+    {
+        return $this->is_active;
+    }
+
+    public function getActiveSuspension()
+    {
+        return $this->suspensions()
+                   ->where('status', 'active')
+                   ->where(function($query) {
+                       $query->whereNull('expires_at')
+                             ->orWhere('expires_at', '>', now());
+                   })
+                   ->latest()
+                   ->first();
+    }
 }

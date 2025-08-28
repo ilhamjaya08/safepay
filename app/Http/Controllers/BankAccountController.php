@@ -27,6 +27,14 @@ class BankAccountController extends Controller
     {
         $user = auth()->user();
         
+        // Check if user is suspended or inactive
+        if ($user->isSuspended() || !$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Account suspended/inactive - cannot apply for bank account'
+            ], 403);
+        }
+        
         // Check if user already has a bank account
         $existingAccount = BankAccount::where('user_id', $user->id)->first();
         if ($existingAccount) {

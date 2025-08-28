@@ -142,12 +142,13 @@ export default function OperatorDashboard() {
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-lg font-semibold text-gray-900">Recent Users</h3>
-                                <motion.button 
+                                <motion.a 
+                                    href="/operator/users"
                                     className="text-orange-600 hover:text-orange-700 text-sm font-medium"
                                     whileHover={{ scale: 1.05 }}
                                 >
-                                    View All Users
-                                </motion.button>
+                                    Manage Users →
+                                </motion.a>
                             </div>
 
                             <div className="space-y-4">

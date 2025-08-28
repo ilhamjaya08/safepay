@@ -29,6 +29,8 @@ class BankAccount extends Model
         'verified_at',
         'reviewed_at',
         'reviewed_by',
+        'balance',
+        'locked_balance',
     ];
 
     protected $appends = [
@@ -46,6 +48,8 @@ class BankAccount extends Model
             'date_of_birth' => 'date',
             'verified_at' => 'datetime',
             'reviewed_at' => 'datetime',
+            'balance' => 'decimal:2',
+            'locked_balance' => 'decimal:2',
         ];
     }
 
@@ -154,5 +158,38 @@ class BankAccount extends Model
     public function getFullAccountNumberAttribute()
     {
         return $this->account_prefix . $this->branch_code . $this->account_number;
+    }
+
+    public function hasSufficientBalance($amount)
+    {
+        return ($this->balance - $this->locked_balance) >= $amount;
+    }
+
+    public function lockBalance($amount)
+    {
+        if (!$this->hasSufficientBalance($amount)) {
+            return false;
+        }
+        $this->locked_balance += $amount;
+        return $this->save();
+    }
+
+    public function unlockBalance($amount)
+    {
+        $this->locked_balance = max(0, $this->locked_balance - $amount);
+        return $this->save();
+    }
+
+    public function deductBalance($amount)
+    {
+        $this->balance -= $amount;
+        $this->locked_balance -= $amount;
+        return $this->save();
+    }
+
+    public function creditBalance($amount)
+    {
+        $this->balance += $amount;
+        return $this->save();
     }
 }

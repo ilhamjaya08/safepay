@@ -12,6 +12,13 @@ class QRController extends Controller
     public function receive()
     {
         $user = auth()->user();
+        
+        // Check if user is suspended or inactive
+        if ($user->isSuspended() || !$user->is_active) {
+            return redirect()->route('user.dashboard')
+                ->with('error', 'Account suspended/inactive - QR operations not available');
+        }
+        
         $wallet = $user->wallet;
 
         if (!$wallet) {
@@ -93,10 +100,10 @@ class QRController extends Controller
                 ], 400);
             }
 
-            if (!$receiver->is_active) {
+            if (!$receiver->is_active || $receiver->isSuspended()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Receiver account is inactive'
+                    'message' => 'Receiver account is inactive or suspended'
                 ], 400);
             }
 

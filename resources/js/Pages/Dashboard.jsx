@@ -4,11 +4,13 @@ import { motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 
 export default function Dashboard() {
-    const { auth, wallet, transactions } = usePage().props;
+    const { auth, wallet, transactions, bank_account, real_balance } = usePage().props;
     const user = auth.user;
 
-    // Dummy data
-    const balance = 4520750.50;
+    // Real balance or display messages
+    const balance = real_balance !== null ? real_balance : 
+                   (wallet === null ? "No Wallet" : 0);
+    
     const cardNumber = "**** 9877";
     const expiry = "05/25";
 
@@ -91,7 +93,7 @@ export default function Dashboard() {
                             <div className="mb-6">
                                 <div className="flex items-center space-x-2 mb-2">
                                     <h2 className="text-3xl lg:text-4xl font-bold">
-                                        {formatCurrency(balance)}
+                                        {typeof balance === 'number' ? formatCurrency(balance) : balance}
                                     </h2>
                                     <motion.button
                                         whileHover={{ scale: 1.1 }}
