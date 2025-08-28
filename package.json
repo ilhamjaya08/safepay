@@ -24,6 +24,8 @@
     },
     "dependencies": {
         "@iconify/react": "^6.0.0",
-        "framer-motion": "^12.23.12"
+        "@yudiel/react-qr-scanner": "^2.3.1",
+        "framer-motion": "^12.23.12",
+        "qrcode": "^1.5.4"
     }
 }

@@ -48,9 +48,9 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     <NavLink
                                         href={route('dashboard')}
-                                        active={route().current('dashboard')}
+                                        active={route().current('dashboard') || route().current('user.dashboard') || route().current('operator.dashboard') || route().current('manager.dashboard')}
                                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                            route().current('dashboard')
+                                            route().current('dashboard') || route().current('user.dashboard') || route().current('operator.dashboard') || route().current('manager.dashboard')
                                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                         }`}
@@ -59,29 +59,74 @@ export default function AuthenticatedLayout({ header, children }) {
                                     </NavLink>
                                 </motion.div>
                                 
-                                {/* Additional nav items can be added here */}
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    transition={{ type: "spring", stiffness: 300 }}
-                                >
-                                    <a 
-                                        href="#" 
-                                        className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                                {/* Role-specific navigation */}
+                                {user.role === 'user' && (
+                                    <>
+                                        <motion.div
+                                            whileHover={{ scale: 1.05 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            <a 
+                                                href={route('user.transfer.index')}
+                                                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                                            >
+                                                Transfer
+                                            </a>
+                                        </motion.div>
+                                        <motion.div
+                                            whileHover={{ scale: 1.05 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            <a 
+                                                href={route('user.qr.receive')}
+                                                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                                            >
+                                                QR Code
+                                            </a>
+                                        </motion.div>
+                                    </>
+                                )}
+                                
+                                {(user.role === 'operator' || user.role === 'manager') && (
+                                    <>
+                                        <motion.div
+                                            whileHover={{ scale: 1.05 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            <a 
+                                                href={user.role === 'operator' ? '/operator/bank-applications' : '/manager/bank-applications'} 
+                                                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                                            >
+                                                Bank Apps
+                                            </a>
+                                        </motion.div>
+                                        <motion.div
+                                            whileHover={{ scale: 1.05 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            <a 
+                                                href="#" 
+                                                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                                            >
+                                                Reports
+                                            </a>
+                                        </motion.div>
+                                    </>
+                                )}
+                                
+                                {user.role === 'manager' && (
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        transition={{ type: "spring", stiffness: 300 }}
                                     >
-                                        Transaksi
-                                    </a>
-                                </motion.div>
-                                <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    transition={{ type: "spring", stiffness: 300 }}
-                                >
-                                    <a 
-                                        href="#" 
-                                        className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                                    >
-                                        Laporan
-                                    </a>
-                                </motion.div>
+                                        <a 
+                                            href="#" 
+                                            className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                                        >
+                                            System
+                                        </a>
+                                    </motion.div>
+                                )}
                             </div>
                         </div>
 
@@ -123,6 +168,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                         <div className="px-4 py-2 border-b border-gray-100">
                                             <p className="text-sm font-medium text-gray-900">{user.name}</p>
                                             <p className="text-xs text-gray-500">{user.email}</p>
+                                            <span className={`inline-flex mt-1 items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                                user.role === 'manager' ? 'bg-red-100 text-red-800' :
+                                                user.role === 'operator' ? 'bg-orange-100 text-orange-800' :
+                                                'bg-blue-100 text-blue-800'
+                                            }`}>
+                                                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                                            </span>
                                         </div>
                                         <Dropdown.Link href={route('profile.edit')}>
                                             Profil

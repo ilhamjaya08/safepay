@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 
 export default function Dashboard() {
-    const { auth } = usePage().props;
+    const { auth, wallet, transactions } = usePage().props;
     const user = auth.user;
 
     // Dummy data
@@ -19,7 +19,7 @@ export default function Dashboard() {
         { id: 4, name: "Rosalia", avatar: "R", color: "bg-pink-500" },
     ];
 
-    const transactions = [
+    const dummyTransactions = [
         { id: 1, name: "Netflix Premium", amount: -89000, date: "Dec 15, 2023", status: "Paid", icon: "logos:netflix-icon", color: "text-red-600" },
         { id: 2, name: "Spotify Premium", amount: -65000, date: "Dec 15, 2023", status: "Paid", icon: "logos:spotify-icon", color: "text-green-600" },
         { id: 3, name: "Transfer dari John", amount: 250000, date: "Dec 14, 2023", status: "Received", icon: "mdi:account-arrow-down", color: "text-blue-600" },
@@ -206,7 +206,7 @@ export default function Dashboard() {
                         </div>
 
                         <div className="space-y-4">
-                            {transactions.map((transaction, index) => (
+                            {(transactions || dummyTransactions).map((transaction, index) => (
                                 <motion.div
                                     key={transaction.id}
                                     className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors"

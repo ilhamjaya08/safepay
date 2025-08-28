@@ -12,13 +12,30 @@ class BankAccount extends Model
 
     protected $fillable = [
         'user_id',
-        'bank_code',
-        'bank_name',
+        'account_type',
+        'account_prefix',
+        'branch_code',
         'account_number',
         'account_holder_name',
+        'id_card_number',
+        'date_of_birth',
+        'address',
+        'phone_number',
+        'mother_maiden_name',
         'is_verified',
         'is_primary',
+        'status',
+        'rejection_reason',
         'verified_at',
+        'reviewed_at',
+        'reviewed_by',
+    ];
+
+    protected $appends = [
+        'account_type_display',
+        'branch_name', 
+        'full_account_number',
+        'masked_account_number'
     ];
 
     protected function casts(): array
@@ -26,7 +43,9 @@ class BankAccount extends Model
         return [
             'is_verified' => 'boolean',
             'is_primary' => 'boolean',
+            'date_of_birth' => 'date',
             'verified_at' => 'datetime',
+            'reviewed_at' => 'datetime',
         ];
     }
 
@@ -34,6 +53,11 @@ class BankAccount extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
     // Scopes
@@ -47,9 +71,14 @@ class BankAccount extends Model
         return $query->where('is_primary', true);
     }
 
-    public function scopeByBank($query, $bankCode)
+    public function scopeByType($query, $accountType)
     {
-        return $query->where('bank_code', $bankCode);
+        return $query->where('account_type', $accountType);
+    }
+
+    public function scopeByBranch($query, $branchCode)
+    {
+        return $query->where('branch_code', $branchCode);
     }
 
     // Helper methods
@@ -84,25 +113,46 @@ class BankAccount extends Model
         $this->save();
     }
 
-    public static function getSupportedBanks()
+    public static function getSupportedAccountTypes()
     {
         return [
-            'BCA' => 'Bank Central Asia',
-            'BNI' => 'Bank Negara Indonesia',
-            'BRI' => 'Bank Rakyat Indonesia',
-            'MANDIRI' => 'Bank Mandiri',
-            'PERMATA' => 'Bank Permata',
-            'CIMB' => 'CIMB Niaga',
-            'DANAMON' => 'Bank Danamon',
-            'BSI' => 'Bank Syariah Indonesia',
-            'BCA_SYARIAH' => 'BCA Syariah',
-            'MAYBANK' => 'Maybank Indonesia'
+            'savings' => 'Savings Account (Tabungan)',
+            'checking' => 'Checking Account (Giro)',
+            'premium' => 'Premium Account',
+            'business' => 'Business Account'
         ];
     }
 
-    public function getBankNameDisplayAttribute()
+    public static function getBranches()
     {
-        $banks = self::getSupportedBanks();
-        return $banks[$this->bank_code] ?? $this->bank_name;
+        return [
+            '001' => 'SafePay Jakarta Pusat',
+            '002' => 'SafePay Jakarta Barat', 
+            '003' => 'SafePay Jakarta Timur',
+            '004' => 'SafePay Jakarta Selatan',
+            '005' => 'SafePay Jakarta Utara',
+            '010' => 'SafePay Surabaya',
+            '020' => 'SafePay Bandung',
+            '030' => 'SafePay Medan',
+            '040' => 'SafePay Semarang',
+            '050' => 'SafePay Yogyakarta'
+        ];
+    }
+
+    public function getAccountTypeDisplayAttribute()
+    {
+        $types = self::getSupportedAccountTypes();
+        return $types[$this->account_type] ?? $this->account_type;
+    }
+
+    public function getBranchNameAttribute()
+    {
+        $branches = self::getBranches();
+        return $branches[$this->branch_code] ?? 'SafePay Branch ' . $this->branch_code;
+    }
+
+    public function getFullAccountNumberAttribute()
+    {
+        return $this->account_prefix . $this->branch_code . $this->account_number;
     }
 }

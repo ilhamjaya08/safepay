@@ -58,7 +58,7 @@ class Wallet extends Model
 
     public function unlockBalance($amount)
     {
-        $this->locked_balance = max(0, $this->locked_balance - $amount);
+        $this->locked_balance = max(0, (float) $this->locked_balance - (float) $amount);
         $this->save();
     }
 
