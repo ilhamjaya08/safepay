@@ -251,7 +251,7 @@ export default function UserDashboard() {
 
                     {/* Action Buttons */}
                     <motion.div
-                        className="grid grid-cols-4 gap-4"
+                        className="grid grid-cols-3 gap-4"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
@@ -277,14 +277,7 @@ export default function UserDashboard() {
                                 color: "text-green-600", 
                                 href: user_status?.can_transact ? route('user.qr.receive') : '#', 
                                 disabled: !user_status?.can_transact 
-                            },
-                            { 
-                                name: "History", 
-                                icon: "mdi:history", 
-                                color: "text-orange-600", 
-                                href: "#", 
-                                disabled: false 
-                            },
+                            }
                         ].map((action, index) => (
                             <motion.div
                                 key={action.name}
@@ -389,7 +382,7 @@ export default function UserDashboard() {
                                     className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
                                     whileHover={{ scale: 1.05 }}
                                 >
-                                    Lihat Semua
+                                    {/* Lihat Semua */}
                                 </motion.button>
                             ) : (
                                 <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-md">
