@@ -89,6 +89,7 @@ Route::middleware(['auth', 'verified', 'role:operator'])->group(function () {
 Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
     Route::get('/manager/dashboard', [DashboardController::class, 'manager'])->name('manager.dashboard');
     Route::get('/manager/activities', [DashboardController::class, 'managerActivities'])->name('manager.activities');
+    Route::get('/manager/activities/export', [DashboardController::class, 'exportManagerActivities'])->name('manager.activities.export');
     Route::get('/manager/bank-applications', function() {
         return Inertia::render('Operator/BankApplications'); // Same component as operator
     })->name('manager.bank.applications');
