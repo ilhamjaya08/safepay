@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
+import jsQR from 'jsqr';
 
 export default function QRScanner({ onScan, onError, onClose }) {
     const videoRef = useRef(null);
+    const canvasRef = useRef(null);
     const [stream, setStream] = useState(null);
     const [scanning, setScanning] = useState(false);
+    const scanningIntervalRef = useRef(null);
 
     useEffect(() => {
         startCamera();
@@ -14,6 +17,21 @@ export default function QRScanner({ onScan, onError, onClose }) {
         };
     }, []);
 
+    useEffect(() => {
+        if (scanning && videoRef.current) {
+            // Start scanning loop
+            scanningIntervalRef.current = setInterval(() => {
+                captureFrame();
+            }, 100); // Scan every 100ms
+        }
+
+        return () => {
+            if (scanningIntervalRef.current) {
+                clearInterval(scanningIntervalRef.current);
+            }
+        };
+    }, [scanning]);
+
     const startCamera = async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -21,7 +39,7 @@ export default function QRScanner({ onScan, onError, onClose }) {
                     facingMode: 'environment' // Use back camera
                 }
             });
-            
+
             setStream(mediaStream);
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
@@ -38,6 +56,9 @@ export default function QRScanner({ onScan, onError, onClose }) {
             stream.getTracks().forEach(track => track.stop());
             setStream(null);
         }
+        if (scanningIntervalRef.current) {
+            clearInterval(scanningIntervalRef.current);
+        }
         setScanning(false);
     };
 
@@ -45,6 +66,10 @@ export default function QRScanner({ onScan, onError, onClose }) {
         if (!videoRef.current || !scanning) return;
 
         const video = videoRef.current;
+
+        // Check if video is ready
+        if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
 
@@ -52,15 +77,25 @@ export default function QRScanner({ onScan, onError, onClose }) {
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Convert to data URL for manual processing
-        const imageData = canvas.toDataURL('image/png');
-        
-        // For demo purposes, we'll simulate QR detection
-        // In real implementation, you'd use a QR decode library here
-        // But for now, let's make it work with manual input
-        
-        // This is a simplified approach - you could integrate with jsQR library
-        // or use the device's built-in scanning capabilities
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+        // Decode QR code from image data
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+        });
+
+        if (code) {
+            console.log('QR Code detected:', code.data);
+            // Stop scanning to prevent multiple detections
+            setScanning(false);
+            if (scanningIntervalRef.current) {
+                clearInterval(scanningIntervalRef.current);
+            }
+            // Call onScan callback with QR data
+            if (onScan) {
+                onScan(code.data);
+            }
+        }
     };
 
     const [showManualInput, setShowManualInput] = useState(false);

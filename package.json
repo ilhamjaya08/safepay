@@ -26,6 +26,7 @@
         "@iconify/react": "^6.0.0",
         "@yudiel/react-qr-scanner": "^2.3.1",
         "framer-motion": "^12.23.12",
+        "jsqr": "^1.4.0",
         "qrcode": "^1.5.4"
     }
 }

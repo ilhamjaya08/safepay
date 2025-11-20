@@ -319,41 +319,41 @@ export default function AuthenticatedLayout({ header, children }) {
             >
                 <div className="flex justify-around items-center">
                     {[
-                        { 
-                            name: "Home", 
-                            icon: "mdi:home", 
+                        {
+                            name: "Home",
+                            icon: "mdi:home",
                             activeIcon: "mdi:home",
                             href: route('dashboard'),
                             active: route().current('dashboard')
                         },
-                        { 
-                            name: "Card", 
-                            icon: "mdi:credit-card-outline", 
-                            activeIcon: "mdi:credit-card",
-                            href: "#",
-                            active: false
+                        {
+                            name: "Receive",
+                            icon: "mdi:cash-plus",
+                            activeIcon: "mdi:cash-plus",
+                            href: route('user.qr.receive'),
+                            active: route().current('user.qr.receive')
                         },
-                        { 
-                            name: "QR", 
-                            icon: "mdi:qrcode-scan", 
+                        {
+                            name: "Scan",
+                            icon: "mdi:qrcode-scan",
                             activeIcon: "mdi:qrcode-scan",
-                            href: "#",
-                            active: false,
+                            href: route('user.qr.send'),
+                            active: route().current('user.qr.send'),
                             special: true
                         },
-                        { 
-                            name: "Report", 
-                            icon: "mdi:chart-line", 
-                            activeIcon: "mdi:chart-line",
-                            href: "#",
-                            active: false
+                        {
+                            name: "Transfer",
+                            icon: "mdi:bank-transfer",
+                            activeIcon: "mdi:bank-transfer",
+                            href: route('user.transfer.index'),
+                            active: route().current('user.transfer.index')
                         },
-                        { 
-                            name: "Settings", 
-                            icon: "mdi:cog-outline", 
+                        {
+                            name: "Settings",
+                            icon: "mdi:cog-outline",
                             activeIcon: "mdi:cog",
-                            href: "#",
-                            active: false
+                            href: route('profile.edit'),
+                            active: route().current('profile.edit')
                         },
                     ].map((item) => (
                         <motion.div
